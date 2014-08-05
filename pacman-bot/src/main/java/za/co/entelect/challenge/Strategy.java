@@ -1,5 +1,6 @@
 package za.co.entelect.challenge;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -7,6 +8,7 @@ import java.util.List;
  */
 public interface Strategy {
   Move getMove(GameState s);
+  Move getMoveIterativeDeepening(GameState s);
   long getNodesEvaluated();
 
   List<Move> getPrincipalVariation();

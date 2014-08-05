@@ -1,0 +1,9 @@
+Player symbol: A
+Opponent symbol: B
+Printing board true
+Reading old game state for player A
+Opponent (B) moved to 12,11 from 12,12
+Running strategy Negamax with search depth 12 for player A
+Done - evaluated 22120 nodes.
+172 ms
+========= DONE =========

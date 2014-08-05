@@ -1,17 +1,26 @@
 package za.co.entelect.challenge;
 
 import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * Created by marais on 2014/07/23.
  */
-public class Player {
+public class Player implements Serializable {
 
   private final Strategy strategy;
+  private List<Move> pv;
+  private boolean iterative = false;
 
-  @Inject
   public Player(Strategy strategy) {
     this.strategy = strategy;
+  }
+
+  @Inject
+  public Player(Strategy strategy, boolean iterative) {
+    this.strategy = strategy;
+    this.iterative = iterative;
   }
 
   /**
@@ -19,11 +28,17 @@ public class Player {
    */
   public GameState makeMove(final GameState s, final boolean performTeleport)
   {
-    Move m = strategy.getMove(s);
-    return s.makeMove(m,performTeleport);
+
+    Move m = iterative ? strategy.getMoveIterativeDeepening(s) : strategy.getMove(s);
+    pv = strategy.getPrincipalVariation();
+    return s.makeMove(m,Main.PERFORM_TELEPORT);
   }
 
   public Strategy getStrategy() {
     return strategy;
+  }
+
+  public List<Move> getPrincipalVariation() {
+    return pv;
   }
 }

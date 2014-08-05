@@ -37,8 +37,8 @@ public class NegamaxTest {
     };
     Point a = GameState.getCurrentPosition(maze,'A');
     Point b = GameState.getCurrentPosition(maze,'B');
-    int[] oppone = new int[]{a.x,a.y,Main.CARRY_POISON,Main.CARRY_POISON,0};
-    int[] player = new int[]{b.x,b.y,Main.CARRY_POISON,Main.CARRY_POISON,0};
+    int[] oppone = new int[]{a.x,a.y,Main.CARRY_POISON,Main.CARRY_POISON,a.x,a.y,0};
+    int[] player = new int[]{b.x,b.y,Main.CARRY_POISON,Main.CARRY_POISON,b.x,b.y,0};
     Main.PLAYER_SYMBOL = 'B';
     Main.OPPONENT_SYMBOL = 'A';
     GameState s = new GameState(maze,player,oppone);
@@ -75,8 +75,8 @@ public class NegamaxTest {
     };
     Point a = GameState.getCurrentPosition(maze, 'A');
     Point b = GameState.getCurrentPosition(maze, 'B');
-    int[] player = new int[]{a.x, a.y, 12, 10, 9}; //A dropped poison on 12,10
-    int[] oppone = new int[]{b.x, b.y, Main.CARRY_POISON, Main.CARRY_POISON, 9};
+    int[] player = new int[]{a.x, a.y, 12, 10, a.x, a.y, 9}; //A dropped poison on 12,10
+    int[] oppone = new int[]{b.x, b.y, Main.CARRY_POISON, Main.CARRY_POISON, b.x, 9};
     Main.PLAYER_SYMBOL = 'A';
     Main.OPPONENT_SYMBOL = 'B';
     GameState s = new GameState(maze, player, oppone);

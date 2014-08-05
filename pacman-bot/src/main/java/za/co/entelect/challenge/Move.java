@@ -5,11 +5,12 @@ package za.co.entelect.challenge;
  */
 
 import java.awt.*;
+import java.io.Serializable;
 
 /**
  * This encapsulates a move instruction with some additional fields to be used in searching algorithms
  */
-public class Move {
+public class Move implements Serializable {
   public final char moverSymbol;
   public final Point to;
   public final boolean dropPoison;
@@ -38,5 +39,19 @@ public class Move {
   @Override
   public String toString() {
     return moverSymbol + ":" + to.x + "," + to.y + (dropPoison ? "!" : "") + "(" + score + ")";
+  }
+
+  /**
+   * Checks for equality but ignores the value of score.
+   * @param obj to check for equality
+   * @return true if equals (ignoring score)
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof Move) {
+      Move r = (Move) obj;
+      return moverSymbol == r.moverSymbol && dropPoison == r.dropPoison && this.to.equals(r.to);
+    }
+    return super.equals(obj);
   }
 }

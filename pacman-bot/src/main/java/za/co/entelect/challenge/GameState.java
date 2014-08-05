@@ -2,6 +2,7 @@ package za.co.entelect.challenge;
 
 
 import java.awt.*;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.List;
@@ -17,12 +18,14 @@ public class GameState implements Serializable {
   public final char[][] maze;
   public final int[] player;
   public final int[] opponent;
-  public static final int PLAYER_SIZE = 5;  //length of player state array
+  public Player playerObject;
+  public static final int PLAYER_SIZE = 6;  //length of player state array
   public static final int POSITION_X = 0;   //index into player state array
   public static final int POSITION_Y = 1;
-  public static final int POISON_X = 2;
-  public static final int POISON_Y = 3;
-  public static final int SCORE = 4;
+  public static final int PREVIOUS_X = 2;
+  public static final int PREVIOUS_Y = 3;
+  public static final int HAS_POISON = 4;
+  public static final int SCORE = 5;
 
 
   public GameState (final char[][] maze, final int[] player, final int[] opponent) {
@@ -49,16 +52,12 @@ public class GameState implements Serializable {
    * @return the GameState
    */
   public GameState makeMove(final char[][] oldMaze, final Move move, final boolean performTeleport) {
-    final int[] oldPlayer;
-    final int[] oldOpponent;
     int[] updatedPlayer;
     int[] updatedOpponent;
     int[] mover;
     int[] other;
 
     //clone players
-    oldPlayer = player;
-    oldOpponent = opponent;
     updatedPlayer = player.clone();
     updatedOpponent = opponent.clone();
     //determine which player array to update based on the symbol.
@@ -72,6 +71,10 @@ public class GameState implements Serializable {
       newMaze[i] = oldMaze[i].clone();
     }
 
+    //keep history of the current position
+    mover[PREVIOUS_X] = mover[POSITION_X];
+    mover[PREVIOUS_Y] = mover[POSITION_Y];
+
     //Calculate moving player's score delta
     int addScore;
     switch (maze[move.to.x][move.to.y]) {
@@ -81,7 +84,6 @@ public class GameState implements Serializable {
       //Eat a bonus pill
       case Main.BONUS_SYMBOL : addScore = 10;
         break;
-
       default: addScore = 0;
     }
 
@@ -89,11 +91,10 @@ public class GameState implements Serializable {
 
     //set old position of player on maze
     if (move.dropPoison) {
-      mover[POISON_X] = mover[POSITION_X];
-      mover[POISON_Y] = mover[POSITION_Y];
-      newMaze[mover[POSITION_X]][mover[POSITION_Y]] = '!';
+      mover[HAS_POISON] = Main.DROPPED_POISON;
+      newMaze[mover[PREVIOUS_X]][mover[PREVIOUS_Y]] = '!';
     } else {
-      newMaze[mover[POSITION_X]][mover[POSITION_Y]] = ' ';
+      newMaze[mover[PREVIOUS_X]][mover[PREVIOUS_Y]] = ' ';
     }
 
     //update player position .. this can change later if she is teleported
@@ -112,15 +113,8 @@ public class GameState implements Serializable {
       }
 
       //if player eats a poison pil, teleport player to center
-      if (move.to.x == oldPlayer[POISON_X] && move.to.y == oldPlayer[POISON_Y]) {      //steps on own poison pill
-        updatedPlayer[POISON_X] = Main.CONSUMED_POISON;
-        updatedPlayer[POISON_Y] = Main.CONSUMED_POISON;
-        mover[POSITION_X] = Main.SPAWN_X;
-        mover[POSITION_Y] = Main.SPAWN_Y;
-        //speedup System.err.println("Player ate a Poison Pill, teleporting to the Respawn area.");
-      }  else if (move.to.x == oldOpponent[POISON_X] && move.to.y == oldOpponent[POISON_Y]) {  //steps on opponents poison pill
-        updatedOpponent[POISON_X] = Main.CONSUMED_POISON;
-        updatedOpponent[POISON_Y] = Main.CONSUMED_POISON;
+      if (oldMaze[move.to.x][move.to.y] == Main.POISON_SYMBOL) {
+        newMaze[mover[POSITION_X]][mover[POSITION_Y]] = ' ';
         mover[POSITION_X] = Main.SPAWN_X;
         mover[POSITION_Y] = Main.SPAWN_Y;
         //speedup System.err.println("Player ate a Poison Pill, teleporting to the Respawn area.");
@@ -136,7 +130,7 @@ public class GameState implements Serializable {
     return mover[POSITION_X] >= 9 && mover[POSITION_X] <= 11 && mover[POSITION_Y] == 9;
   }
 
-  public java.util.List<Move> determineAllBasicMoves(char moverChar) {
+  public java.util.List<Move> determineAllBasicMoves(char moverChar, boolean excludeHistory) {
     int[] mover;
     //speedup System.err.println("Calculating possible moves for " + moverChar);
     if (moverChar == Main.PLAYER_SYMBOL) {
@@ -149,19 +143,19 @@ public class GameState implements Serializable {
       throw new IllegalArgumentException("Unknown player symbol.");
     }
     java.util.List<Move> moveList = new ArrayList<Move>();
-    boolean hasPoison = mover[POISON_X] == Main.CARRY_POISON;
+    boolean hasPoison = mover[HAS_POISON] == Main.CARRY_POISON;
 
     if (insideRespawn(mover)) {
       //Can only move up and down, can't eat another player
       //If in the middle, move up or down except if there is another player there.
       if (mover[POSITION_X] == Main.SPAWN_X && mover[POSITION_Y] == Main.SPAWN_Y) {
         //Move down
-        if (maze[mover[POSITION_X] + 1][mover[POSITION_Y]] != Main.OPPONENT_SYMBOL ||
+        if (maze[mover[POSITION_X] + 1][mover[POSITION_Y]] != Main.OPPONENT_SYMBOL &&
             maze[mover[POSITION_X] + 1][mover[POSITION_Y]] != Main.PLAYER_SYMBOL)
           addMoveToList(moveList, moverChar, new Point(mover[POSITION_X] + 1, mover[POSITION_Y]), hasPoison);
 
         //Move up
-        if (maze[mover[POSITION_X] - 1][mover[POSITION_Y]] != Main.OPPONENT_SYMBOL ||
+        if (maze[mover[POSITION_X] - 1][mover[POSITION_Y]] != Main.OPPONENT_SYMBOL &&
             maze[mover[POSITION_X] - 1][mover[POSITION_Y]] != Main.PLAYER_SYMBOL)
           addMoveToList(moveList, moverChar, new Point(mover[POSITION_X] - 1, mover[POSITION_Y]), hasPoison);
         //can only move down if first move was down
@@ -207,6 +201,13 @@ public class GameState implements Serializable {
       maze[11][9] = bot;
     }
     //speedup System.err.println("Player " + moverChar + " has " + moveList.size() + " possible moves");
+    //remove the one where player came from
+    if (excludeHistory) {
+      moveList.remove(new Move(moverChar, new Point(mover[PREVIOUS_X], mover[PREVIOUS_Y]), false));
+    }
+    if (excludeHistory && hasPoison) {
+      moveList.remove(new Move(moverChar, new Point(mover[PREVIOUS_X], mover[PREVIOUS_Y]), true));
+    }
     return moveList;
   }
 
@@ -216,11 +217,11 @@ public class GameState implements Serializable {
   }
 
   public boolean playerHasPoison() {
-    return player[POISON_X] == Main.CARRY_POISON;
+    return player[HAS_POISON] == Main.CARRY_POISON;
   }
 
   public boolean opponentHasPoison() {
-    return opponent[POISON_X] == Main.CARRY_POISON;
+    return opponent[HAS_POISON] == Main.CARRY_POISON;
   }
 
   /**
@@ -240,13 +241,15 @@ public class GameState implements Serializable {
     int[] opp = new int[PLAYER_SIZE];
     player[POSITION_X] = playerPosition.x;
     player[POSITION_Y] = playerPosition.y;
-    player[POISON_X] = Main.CARRY_POISON;
-    player[POISON_Y] = Main.CARRY_POISON;
+    player[PREVIOUS_X] = playerPosition.x;
+    player[PREVIOUS_Y] = playerPosition.y;
+    player[HAS_POISON] = Main.CARRY_POISON;
     player[SCORE] = 0;
     opp[POSITION_X] = oppPosition.x;
     opp[POSITION_Y] = oppPosition.y;
-    opp[POISON_X] = Main.CARRY_POISON;
-    opp[POISON_Y] = Main.CARRY_POISON;
+    opp[PREVIOUS_X] = oppPosition.x;
+    opp[PREVIOUS_Y] = oppPosition.y;
+    opp[HAS_POISON] = Main.CARRY_POISON;
     opp[SCORE] = 0;
     return new GameState(newMaze,player,opp);
 
@@ -276,7 +279,7 @@ public class GameState implements Serializable {
     //Did the opponent drop a poison pill?
     if (newMaze[opponent[POSITION_X]][opponent[POSITION_Y]] == Main.PILL_SYMBOL)
       System.err.println("Opponent dropped poison on " + opponent[POSITION_X] + "," + opponent[POSITION_Y]);
-    return newMaze[opponent[POSITION_X]][opponent[POSITION_Y]] == Main.PILL_SYMBOL;
+    return newMaze[opponent[POSITION_X]][opponent[POSITION_Y]] == Main.POISON_SYMBOL;
   }
 
   public GameState updateFromInput(char[][] newMaze) {
@@ -294,23 +297,45 @@ public class GameState implements Serializable {
       newState.player[POSITION_Y] = myPos.y;
     }
 
-    //detect poison consumed
-    //this part breaks the rules about GameState being immutable.
-    //Poison values are changed on the newState
-    if (!(player[POISON_X] == Main.CARRY_POISON || player[POISON_X] == Main.CONSUMED_POISON)) // if dropped and not yet consumed
-      if (newMaze[player[POISON_X]][player[POISON_Y]] != Main.PILL_SYMBOL) {                   // if pill missing, set to consumed
-        newState.player[POISON_X] = newState.player[POISON_Y] = Main.CONSUMED_POISON;
-        System.err.println("A poison pill at " + player[POISON_X] + "," + player[POISON_Y] + " has been consumed");
-      }
-    if (!(opponent[POISON_X] == Main.CARRY_POISON || opponent[POISON_X] == Main.CONSUMED_POISON))
-      if (newMaze[opponent[POISON_X]][opponent[POISON_Y]] != Main.PILL_SYMBOL) {
-        newState.opponent[POISON_X] = newState.opponent[POISON_Y] = Main.CONSUMED_POISON;
-        System.err.println("A poison pill at " + opponent[POISON_X] + "," + opponent[POISON_Y] + " has been consumed");
-      }
     return newState;
   }
 
   public boolean isEndState() {
     return (219 - player[SCORE] - opponent[SCORE]) == 0;
   }
+
+//  @Override
+//  public String toString() {
+//    printMaze(this,null,System.err);
+//  }
+
+  private static void printMaze(GameState state, List<Move> principalVariation, PrintStream stream) {
+    StringBuilder s = new StringBuilder();
+    for (int x = 0; x < Main.HEIGHT; x++) {
+      for (int y = 0; y < Main.WIDTH; y++) {
+        s.append(state.maze[x][y]);
+//        if (state.maze[x][y] == PLAYER_SYMBOL ||
+//            state.maze[x][y] == OPPONENT_SYMBOL ||
+//            state.maze[x][y] == PILL_SYMBOL ||
+//            state.maze[x][y] == BONUS_SYMBOL ||
+//            state.maze[x][y] == '!') {
+        int pvMoveNumber = -1;
+        for (Move m : principalVariation) {
+          if (m.to.x == x && m.to.y == y) {
+            pvMoveNumber = principalVariation.indexOf(m);
+            break;
+          }
+        }
+
+        s.append(pvMoveNumber > -1 ? "0" : state.maze[x][y] == '.' ? " " : state.maze[x][y] );
+//        }
+//        else {
+//          s.append(state.maze[x][y]);
+//        }
+      }
+      if (x != Main.HEIGHT - 1) s.append('\n');
+    }
+    stream.println(s);
+  }
 }
+

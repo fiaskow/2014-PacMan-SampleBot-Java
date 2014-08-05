@@ -39,8 +39,8 @@ public class SimpleEvalTest {
     };
     Point a = GameState.getCurrentPosition(maze,'A');
     Point b = GameState.getCurrentPosition(maze,'B');
-    int[] oppone = new int[]{a.x,a.y,12,10,9}; //A dropped poison on 12,10
-    int[] player = new int[]{b.x,b.y,Main.CARRY_POISON,Main.CARRY_POISON,9};
+    int[] oppone = new int[]{a.x,a.y,12,10,a.x,a.y,9}; //A dropped poison on 12,10
+    int[] player = new int[]{b.x,b.y,Main.CARRY_POISON,Main.CARRY_POISON,b.x,b.y,9};
     GameState s = new GameState(maze, player, oppone);
     Main.PLAYER_SYMBOL = 'B';
     Main.OPPONENT_SYMBOL = 'A';
