@@ -1,6 +1,5 @@
 package za.co.entelect.challenge;
 
-import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.List;
 
@@ -17,7 +16,6 @@ public class Player implements Serializable {
     this.strategy = strategy;
   }
 
-  @Inject
   public Player(Strategy strategy, boolean iterative) {
     this.strategy = strategy;
     this.iterative = iterative;
@@ -28,10 +26,9 @@ public class Player implements Serializable {
    */
   public GameState makeMove(final GameState s, final boolean performTeleport)
   {
-
     Move m = iterative ? strategy.getMoveIterativeDeepening(s) : strategy.getMove(s);
     pv = strategy.getPrincipalVariation();
-    return s.makeMove(m,Main.PERFORM_TELEPORT);
+    return s.makeMove(m,performTeleport);
   }
 
   public Strategy getStrategy() {

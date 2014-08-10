@@ -1,8 +1,6 @@
 package za.co.entelect.challenge;
 
-import javax.inject.Inject;
 import java.io.Serializable;
-import java.rmi.server.ServerRef;
 import java.util.ArrayList;
 import java.util.List;
 

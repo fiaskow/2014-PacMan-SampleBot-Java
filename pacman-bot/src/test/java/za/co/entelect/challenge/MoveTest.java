@@ -424,4 +424,5 @@ public class MoveTest {
     List<Move> moves = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,true);
     assertEquals(2,moves.size());
   }
+
 }

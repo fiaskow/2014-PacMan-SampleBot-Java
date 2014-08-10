@@ -31,7 +31,6 @@ public class Main {
   public static final int DROPPED_POISON = 0;
   public static boolean PERFORM_TELEPORT = false;
   public static boolean printBoard = false;
-  public static boolean noHarness = true;
   public static long calctime = 0;
   public static long starttime = 0;
   public static long endtime = 0;
@@ -42,6 +41,9 @@ public class Main {
 
         Start MinMax on current GameState
      */
+
+
+
 
 
   public static void main(String[] args) {
@@ -91,7 +93,7 @@ public class Main {
     //Negamax strategy = new Negamax(new SimpleEval());
     //Move move = strategy.getMove(currentState,null,11,1);
     //GameState newState = currentState.makeMove(Main.PLAYER_SYMBOL,move,noHarness);
-    GameState newState = player.makeMove(currentState,noHarness);
+    GameState newState = player.makeMove(currentState,PERFORM_TELEPORT);
     writeMaze(newState.maze, OUTPUT_FILE_NAME);
     writeGameState(newState, player);
     if (printBoard) printGameState(newState,player,System.out);

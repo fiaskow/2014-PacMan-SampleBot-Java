@@ -1,6 +1,5 @@
 package za.co.entelect.challenge;
 
-import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,6 @@ public class Negamax implements Strategy, Serializable {
   private static long nodesEvaluated;
   private Move pvMove = null;
 
-  @Inject
   public Negamax(Evaluator evaluator){
     this.eval = evaluator;
   }
