@@ -2,8 +2,10 @@ package za.co.entelect.challenge;
 
 
 import java.awt.*;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.nio.file.*;
 import java.util.*;
 import java.util.List;
 
@@ -14,6 +16,7 @@ import java.util.List;
  */
 public class GameState implements Serializable {
   private static final long serialVersionUID = 9282786647133L;
+  private static final Stack<int[]> statestack = new Stack<int[]>();
 
   public final char[][] maze;
   public final int[] player;
@@ -126,6 +129,10 @@ public class GameState implements Serializable {
     return new GameState(newMaze,updatedPlayer,updatedOpponent);
   }
 
+  public GameState makeMove2(Move move, final boolean performTeleport) {
+    return this;
+  }
+
   public boolean insideRespawn(int[] mover) {
     return mover[POSITION_X] >= 9 && mover[POSITION_X] <= 11 && mover[POSITION_Y] == 9;
   }
@@ -145,7 +152,8 @@ public class GameState implements Serializable {
     java.util.List<Move> moveList = new ArrayList<Move>();
     boolean hasPoison = mover[HAS_POISON] == Main.CARRY_POISON;
 
-    if (insideRespawn(mover)) {
+    //if inside respawn area
+    if (mover[POSITION_X] >= 9 && mover[POSITION_X] <= 11 && mover[POSITION_Y] == 9) {
       //Can only move up and down, can't eat another player
       //If in the middle, move up or down except if there is another player there.
       if (mover[POSITION_X] == Main.SPAWN_X && mover[POSITION_Y] == Main.SPAWN_Y) {
@@ -169,44 +177,43 @@ public class GameState implements Serializable {
       //add walls to close the respawn area
       char top = maze[9][9]; maze[9][9] = Main.WALL;
       char bot = maze[11][9]; maze[11][9] = Main.WALL;
-      //Move Right
-      if (mover[POSITION_Y] + 1 < Main.WIDTH)
-        if (maze[mover[POSITION_X]][mover[POSITION_Y] + 1] != Main.WALL)
-          addMoveToList(moveList,moverChar,new Point(mover[POSITION_X], mover[POSITION_Y] + 1),hasPoison);
-
-      //Move Left
-      if (mover[POSITION_Y] - 1 >= 0)
-        if (maze[mover[POSITION_X]][mover[POSITION_Y] - 1] != Main.WALL)
-          addMoveToList(moveList,moverChar,new Point(mover[POSITION_X], mover[POSITION_Y] - 1),hasPoison);
 
       //Move down
       if (mover[POSITION_X] + 1 < Main.HEIGHT)
-        if (maze[mover[POSITION_X] + 1][mover[POSITION_Y]] != Main.WALL)
+        if (maze[mover[POSITION_X] + 1][mover[POSITION_Y]] != Main.WALL &&
+            !(excludeHistory && mover[POSITION_X] + 1 == mover[PREVIOUS_X] && mover[POSITION_Y] == mover[PREVIOUS_Y]))
           addMoveToList(moveList,moverChar,new Point(mover[POSITION_X] + 1, mover[POSITION_Y]),hasPoison);
 
       //Move up
       if (mover[POSITION_X] - 1 >= 0)
-        if (maze[mover[POSITION_X] - 1][mover[POSITION_Y]] != Main.WALL)
+        if (maze[mover[POSITION_X] - 1][mover[POSITION_Y]] != Main.WALL &&
+            !(excludeHistory && mover[POSITION_X] - 1 == mover[PREVIOUS_X] && mover[POSITION_Y] == mover[PREVIOUS_Y]))
           addMoveToList(moveList,moverChar,new Point(mover[POSITION_X] - 1, mover[POSITION_Y]),hasPoison);
 
+      //Move Right
+      if (mover[POSITION_Y] + 1 < Main.WIDTH)
+        if (maze[mover[POSITION_X]][mover[POSITION_Y] + 1] != Main.WALL &&
+            !(excludeHistory && mover[POSITION_X] == mover[PREVIOUS_X] && mover[POSITION_Y] + 1 == mover[PREVIOUS_Y]))
+          addMoveToList(moveList,moverChar,new Point(mover[POSITION_X], mover[POSITION_Y] + 1),hasPoison);
+
+      //Move Left
+      if (mover[POSITION_Y] - 1 >= 0)
+        if (maze[mover[POSITION_X]][mover[POSITION_Y] - 1] != Main.WALL &&
+            !(excludeHistory && mover[POSITION_X] == mover[PREVIOUS_X] && mover[POSITION_Y] - 1 == mover[PREVIOUS_Y]))
+          addMoveToList(moveList,moverChar,new Point(mover[POSITION_X], mover[POSITION_Y] - 1),hasPoison);
+
       //Jump Portal 1 => Portal 2
-      if (mover[POSITION_X] == Main.PORTAL1_X && mover[POSITION_Y] == Main.PORTAL1_Y)
+      if (mover[POSITION_X] == Main.PORTAL1_X && mover[POSITION_Y] == Main.PORTAL1_Y &&
+          !(excludeHistory && mover[PREVIOUS_X] == Main.PORTAL2_X && mover[PREVIOUS_Y] == Main.PORTAL2_Y))
         addMoveToList(moveList,moverChar,new Point(Main.PORTAL2_X, Main.PORTAL2_Y),hasPoison);
 
       //Jump Portal 2 => Portal 1
-      if (mover[POSITION_X] == Main.PORTAL2_X && mover[POSITION_Y] == Main.PORTAL2_Y)
+      if (mover[POSITION_X] == Main.PORTAL2_X && mover[POSITION_Y] == Main.PORTAL2_Y &&
+          !(excludeHistory && mover[PREVIOUS_X] == Main.PORTAL1_X && mover[PREVIOUS_Y] == Main.PORTAL1_Y))
         addMoveToList(moveList,moverChar,new Point(Main.PORTAL1_X, Main.PORTAL1_Y),hasPoison);
       //restore walls
       maze[9][9] = top;
       maze[11][9] = bot;
-    }
-    //speedup System.err.println("Player " + moverChar + " has " + moveList.size() + " possible moves");
-    //remove the one where player came from
-    if (excludeHistory) {
-      moveList.remove(new Move(moverChar, new Point(mover[PREVIOUS_X], mover[PREVIOUS_Y]), false));
-    }
-    if (excludeHistory && hasPoison) {
-      moveList.remove(new Move(moverChar, new Point(mover[PREVIOUS_X], mover[PREVIOUS_Y]), true));
     }
     return moveList;
   }
@@ -250,9 +257,18 @@ public class GameState implements Serializable {
     opp[PREVIOUS_X] = oppPosition.x;
     opp[PREVIOUS_Y] = oppPosition.y;
     opp[HAS_POISON] = Main.CARRY_POISON;
-    opp[SCORE] = 0;
+    opp[SCORE] = 179 - countPills(maze);
     return new GameState(newMaze,player,opp);
 
+  }
+
+  private static int countPills(char[][] maze) {
+    int count = 0;
+    for (int j = 0; j < Main.HEIGHT; j++)
+      for (int i = 0; i < Main.WIDTH; i++)
+        if (maze[j][i] == Main.PILL_SYMBOL)
+          count++;
+    return count;
   }
 
   public static Point getCurrentPosition(final char[][] maze, char playerSymbol) {
@@ -286,16 +302,25 @@ public class GameState implements Serializable {
     //get opponent move
     Point oppPos = getCurrentPosition(newMaze, Main.OPPONENT_SYMBOL);
     Move oppMove = new Move(Main.OPPONENT_SYMBOL,oppPos,detectPoisonDropped(newMaze));
-    System.err.println("Opponent (" + Main.OPPONENT_SYMBOL + ") moved to " + oppPos.x + "," + oppPos.y + " from " + opponent[POSITION_X] + "," + opponent[POSITION_Y]);
-    //make move on current game state
-    GameState newState = makeMove(newMaze,oppMove,false);
+    //System.err.println("Opponent (" + Main.OPPONENT_SYMBOL + ") moved to " + oppPos.x + "," + oppPos.y + " from " + opponent[POSITION_X] + "," + opponent[POSITION_Y]);
+
     //harness may have teleported us
     Point myPos = getCurrentPosition(newMaze, Main.PLAYER_SYMBOL);
     if (player[POSITION_X] != myPos.x || player[POSITION_Y] != myPos.y) {
-      System.err.println("Player (" + Main.PLAYER_SYMBOL + ") has been teleported. Updating position");
-      newState.player[POSITION_X] = myPos.x;
-      newState.player[POSITION_Y] = myPos.y;
+      //System.err.println("Player (" + Main.PLAYER_SYMBOL + ") has been teleported. Updating position");
+      player[POSITION_X] = myPos.x;
+      player[POSITION_Y] = myPos.y;
+      // DEBUG make a backup copy of the internal state.
+//      Path internalStateFile = FileSystems.getDefault().getPath(Main.PLAYER_SYMBOL+Main.INTERNAL_FILE_NAME);
+//      Path internalStateFileBackup = FileSystems.getDefault().getPath("backup"+Main.PLAYER_SYMBOL+Main.INTERNAL_FILE_NAME);
+//      try {
+//        Files.copy(internalStateFile,internalStateFileBackup, StandardCopyOption.REPLACE_EXISTING);
+//      } catch (IOException e) {
+//        e.printStackTrace();
+//      }
     }
+    //make move on current game state
+    GameState newState = makeMove(newMaze,oppMove,false);
 
     return newState;
   }
@@ -309,11 +334,11 @@ public class GameState implements Serializable {
 //    printMaze(this,null,System.err);
 //  }
 
-  private static void printMaze(GameState state, List<Move> principalVariation, PrintStream stream) {
+  public void printMaze(List<Move> principalVariation, PrintStream stream) {
     StringBuilder s = new StringBuilder();
     for (int x = 0; x < Main.HEIGHT; x++) {
       for (int y = 0; y < Main.WIDTH; y++) {
-        s.append(state.maze[x][y]);
+        s.append(maze[x][y]);
 //        if (state.maze[x][y] == PLAYER_SYMBOL ||
 //            state.maze[x][y] == OPPONENT_SYMBOL ||
 //            state.maze[x][y] == PILL_SYMBOL ||
@@ -327,7 +352,7 @@ public class GameState implements Serializable {
           }
         }
 
-        s.append(pvMoveNumber > -1 ? "0" : state.maze[x][y] == '.' ? " " : state.maze[x][y] );
+        s.append(pvMoveNumber > -1 ? "0" : maze[x][y] == '.' ? " " : maze[x][y] );
 //        }
 //        else {
 //          s.append(state.maze[x][y]);

@@ -28,6 +28,7 @@ public class Player implements Serializable {
   {
     Move m = iterative ? strategy.getMoveIterativeDeepening(s) : strategy.getMove(s);
     pv = strategy.getPrincipalVariation();
+    assert m != null;
     return s.makeMove(m,performTeleport);
   }
 

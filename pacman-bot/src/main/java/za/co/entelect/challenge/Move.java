@@ -38,7 +38,7 @@ public class Move implements Serializable {
 
   @Override
   public String toString() {
-    return moverSymbol + ":" + to.x + "," + to.y + (dropPoison ? "!" : "") + "(" + score + ")";
+    return moverSymbol + ":" + to.x + "," + to.y + (dropPoison ? "*!*" : "");
   }
 
   /**

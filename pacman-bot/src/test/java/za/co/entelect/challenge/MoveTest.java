@@ -8,6 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -384,11 +385,14 @@ public class MoveTest {
         "#.................#".toCharArray(),
         "###################".toCharArray()
     };
+    Main.PLAYER_SYMBOL = 'A';
     int[] player = new int[]{10,9,12,8,Main.DROPPED_POISON,0};
     int[] oppone = new int[]{9,9,10,9,Main.DROPPED_POISON,0};
     GameState s = new GameState(maze,player,oppone);
-    List<Move> moves = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,false);
-    assertEquals(1,moves.size());
+    List<Move> moves1 = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,false);
+    List<Move> moves2 = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,true);
+    assertEquals(1,moves1.size());
+    assertEquals(1,moves2.size());
   }
 
 
@@ -425,4 +429,180 @@ public class MoveTest {
     assertEquals(2,moves.size());
   }
 
+  @Test
+  public void determineMovesTest4() {
+    char[][] maze = new char[][]{
+        "###################".toCharArray(),
+        "#........#........#".toCharArray(),
+        "#*##.###.#.###.##*#".toCharArray(),
+        "#.##.###.#.###.##.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "#.##.#.#####.#.##.#".toCharArray(),
+        "#....#...#...#....#".toCharArray(),
+        "####.###.#.###.####".toCharArray(),
+        "####.#.......#.####".toCharArray(),
+        "####.#.## ##.#.####".toCharArray(),
+        "    A..#   #..B    ".toCharArray(),
+        "####.#.## ##.#.####".toCharArray(),
+        "####.#.......#.####".toCharArray(),
+        "####.#.##### #.####".toCharArray(),
+        "#........#........#".toCharArray(),
+        "#.##.###.#.###.##.#".toCharArray(),
+        "#*.#...........#.*#".toCharArray(),
+        "##.#.#.#####.#.#.##".toCharArray(),
+        "#....#...#...#....#".toCharArray(),
+        "#.######.#.######.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "###################".toCharArray()
+    };
+    int[] player = new int[]{10,4,10,3,Main.CARRY_POISON,1};
+    int[] oppone = new int[]{10,14,10,15,Main.CARRY_POISON,1};
+    GameState s = new GameState(maze,player,oppone);
+    List<Move> moves = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,true);
+    assertEquals(6,moves.size());
+    List<Move> moves2 = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,false);
+    assertEquals(8,moves2.size());
+  }
+
+  @Test
+  public void determineMovesTest5() {
+    char[][] maze = new char[][]{
+        "###################".toCharArray(),
+        "#........#........#".toCharArray(),
+        "#*##.###.#.###.##*#".toCharArray(),
+        "#.##.###.#.###.##.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "#.##.#.#####.#.##.#".toCharArray(),
+        "#....#...#...#....#".toCharArray(),
+        "####.###.#.###.####".toCharArray(),
+        "####.#.......#.####".toCharArray(),
+        "####.#.##B##.#.####".toCharArray(),
+        "       #   #       ".toCharArray(),
+        "####.# ##A## #.####".toCharArray(),
+        "####.#       #.####".toCharArray(),
+        "####.#.##### #.####".toCharArray(),
+        "#........#..   ...#".toCharArray(),
+        "#.##.###.#.###.##.#".toCharArray(),
+        "#*.#...........#.*#".toCharArray(),
+        "##.#.#.#####.#.#.##".toCharArray(),
+        "#....#...#...#....#".toCharArray(),
+        "#.######.#.######.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "###################".toCharArray()
+    };
+    Main.PLAYER_SYMBOL = 'A';
+    int[] player = new int[]{11,9,10,9,Main.DROPPED_POISON,0};
+    int[] oppone = new int[]{9,9,10,9,Main.DROPPED_POISON,0};
+    GameState s = new GameState(maze,player,oppone);
+    List<Move> moves1 = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,false);
+    List<Move> moves2 = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,true);
+    assertEquals(1,moves1.size());
+    assertEquals(1,moves2.size());
+  }
+
+  @Test
+  public void makeMove2Test() {
+    char[][] oldMaze = new char[][] {
+        "###################".toCharArray(),
+        "#........#........#".toCharArray(),
+        "#*##.###.#.###.##*#".toCharArray(),
+        "#.##.###.#.###.##.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "#.##.#.#####.#.##.#".toCharArray(),
+        "#....#...#...#....#".toCharArray(),
+        "####.###.#.###.####".toCharArray(),
+        "####.#.......#.####".toCharArray(),
+        "####.#.## ##.#.####".toCharArray(),
+        "       #   #       ".toCharArray(),
+        "####.# ## ## #.####".toCharArray(),
+        "####.#   A!  #.####".toCharArray(),
+        "####.#.##### #.####".toCharArray(),
+        "#........#..  B...#".toCharArray(),
+        "#.##.###.#.###.##.#".toCharArray(),
+        "#*.#...........#.*#".toCharArray(),
+        "##.#.#.#####.#.#.##".toCharArray(),
+        "#....#...#...#....#".toCharArray(),
+        "#.######.#.######.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "###################".toCharArray()
+    };
+    int[] player = new int[]{12,9,12,10,Main.DROPPED_POISON,10};
+    int[] oppone = new int[]{14,14,14,13,Main.CARRY_POISON,9};
+    GameState s = new GameState(oldMaze,player,oppone);
+
+    Move m1 = new Move('A',new Point(12,10),false);
+    GameState s2 = s.makeMove2(m1,true);
+    assertSame(s2,s);
+//    assertEquals(12,s2.player[GameState.POSITION_X]);
+//    assertEquals(10,s2.player[GameState.POSITION_Y]);
+//    assertEquals(12,s2.player[GameState.PREVIOUS_X]);
+//    assertEquals( 9,s2.player[GameState.PREVIOUS_Y]);
+//    assertEquals(10,s2.player[GameState.SCORE]);
+
+
+  }
+
+  @Test
+  public void updateFromInputTest() {
+    char[][] oldMaze = new char[][] {
+        "###################".toCharArray(),
+        "#        #        #".toCharArray(),
+        "# ## ### # ###.## #".toCharArray(),
+        "# ## ### # ###.## #".toCharArray(),
+        "#    B     .      #".toCharArray(),
+        "# ##.#.##### #.##.#".toCharArray(),
+        "#    #...#   #....#".toCharArray(),
+        "#### ###.# ###.####".toCharArray(),
+        "#### #...  ..#.####".toCharArray(),
+        "#### #.## ##.#.####".toCharArray(),
+        "     ..# A #..     ".toCharArray(),
+        "#### #.## ##.# ####".toCharArray(),
+        "#### #.......# ####".toCharArray(),
+        "#### #.#####.# ####".toCharArray(),
+        "#    ....#....    #".toCharArray(),
+        "# ## ###.#.###.## #".toCharArray(),
+        "#  # ..........#. #".toCharArray(),
+        "## # #.#####.#.#.##".toCharArray(),
+        "#.   #...#...#....#".toCharArray(),
+        "#.######.#.######.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "###################".toCharArray()
+    };
+    int[] player = new int[]{4,1,3,1,Main.DROPPED_POISON,10};
+    int[] oppone = new int[]{4,5,4,4,Main.CARRY_POISON,9};
+    GameState s = new GameState(oldMaze,player,oppone);
+
+    char[][] newMaze = new char[][] {
+        "###################".toCharArray(),
+        "#        #        #".toCharArray(),
+        "# ## ### # ###.## #".toCharArray(),
+        "# ## ### # ###.## #".toCharArray(),
+        "#     B    .      #".toCharArray(),
+        "# ##.#.##### #.##.#".toCharArray(),
+        "#    #...#   #....#".toCharArray(),
+        "#### ###.# ###.####".toCharArray(),
+        "#### #...  ..#.####".toCharArray(),
+        "#### #.## ##.#.####".toCharArray(),
+        "     ..# A #..     ".toCharArray(),
+        "#### #.## ##.# ####".toCharArray(),
+        "#### #.......# ####".toCharArray(),
+        "#### #.#####.# ####".toCharArray(),
+        "#    ....#....    #".toCharArray(),
+        "# ## ###.#.###.## #".toCharArray(),
+        "#  # ..........#. #".toCharArray(),
+        "## # #.#####.#.#.##".toCharArray(),
+        "#.   #...#...#....#".toCharArray(),
+        "#.######.#.######.#".toCharArray(),
+        "#.................#".toCharArray(),
+        "###################".toCharArray()
+    };
+
+    GameState s2 = s.updateFromInput(newMaze);
+    assertNotSame(s,s2);
+    Player np = new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()), 16), false);
+    Main.endtime = Long.MAX_VALUE;
+    GameState s3 = np.makeMove(s2,false);
+    //s2.determineAllBasicMoves(Main.PLAYER_SYMBOL)
+    System.err.println("A Positon: " + s3.player[1] + "," +s3.player[2]);
+  }
 }

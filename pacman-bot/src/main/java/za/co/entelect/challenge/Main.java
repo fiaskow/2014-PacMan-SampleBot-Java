@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.rmi.server.ServerRef;
 import java.util.*;
 import java.util.List;
 
@@ -58,8 +59,8 @@ public class Main {
     endtime = starttime + Integer.parseInt(args[4]);
     if (args.length > 5) PERFORM_TELEPORT = Boolean.parseBoolean(args[5]);
     System.err.println("Player symbol: " + PLAYER_SYMBOL);
-    System.err.println("Opponent symbol: " + OPPONENT_SYMBOL);
-    System.err.println("Printing board " + printBoard);
+    //System.err.println("Opponent symbol: " + OPPONENT_SYMBOL);
+    //System.err.println("Printing board " + printBoard);
     char[][] maze = ReadMaze(args[0]);
 //    boolean newGame = false;
 //    if (args.length > 4 && Boolean.parseBoolean(args[4]))
@@ -73,8 +74,9 @@ public class Main {
       player = previousState.playerObject;
     } else {
       currentState = GameState.initGameState(maze);             //This is a new game
-      player = (PLAYER_SYMBOL == 'A') ? new Player(new Negamax(new Quiesce(new ArrayList<Move>()))) : new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),14),true);
-      System.err.println("========= Starting new game. ========== " + (new Date(System.currentTimeMillis()).toString() ));
+      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
+      //player = new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true);
+      //System.err.println("========= Starting new game. ========== " + (new Date(System.currentTimeMillis()).toString() ));
     }
     //System.err.println("Calculated state after input");
     //printGameState(currentState,null, System.err);
@@ -94,6 +96,7 @@ public class Main {
     //Move move = strategy.getMove(currentState,null,11,1);
     //GameState newState = currentState.makeMove(Main.PLAYER_SYMBOL,move,noHarness);
     GameState newState = player.makeMove(currentState,PERFORM_TELEPORT);
+    //printMaze(newState,new ArrayList<Move>(), System.err);
     writeMaze(newState.maze, OUTPUT_FILE_NAME);
     writeGameState(newState, player);
     if (printBoard) printGameState(newState,player,System.out);
@@ -135,12 +138,12 @@ public class Main {
     StringBuilder s = new StringBuilder();
     s.append("\n");
     s.append("\n");
-    s.append("MY SCORE: ");
+    s.append("PLAYER " + PLAYER_SYMBOL + " SCORE: ");
     s.append(state.player[GameState.SCORE]);
     s.append("\tCARRY POISON: ");
     s.append(state.playerHasPoison() ? "YES" : "NO");
     s.append("\n");
-    s.append("OPP SCORE: ");
+    s.append("PLAYER " + OPPONENT_SYMBOL + " SCORE: ");
     s.append(state.opponent[GameState.SCORE]);
     s.append("\tCARRY POISON: ");
     s.append(state.opponentHasPoison() ? "YES" : "NO");
@@ -150,7 +153,8 @@ public class Main {
       s.append("\n");
       s.append("Evaluated " + p.getStrategy().getNodesEvaluated() + " nodes");
       s.append("\n");
-      s.append("PV moves:" + p.getStrategy().getPrincipalVariation().toString());
+      s.append("PV moves:" + p.getStrategy().getPrincipalVariation().get(0).score + " "
+          + p.getStrategy().getPrincipalVariation().toString());
     }
     stream.println(s);
     if (p == null || p.getStrategy() == null) {
@@ -225,7 +229,7 @@ public class Main {
   }
 
   private static GameState ReadOldGameState() {
-    System.err.println("Reading old game state for player " + PLAYER_SYMBOL);
+    //System.err.println("Reading old game state for player " + PLAYER_SYMBOL);
     ObjectInput input = null;
     GameState s = null;
     try {
@@ -233,6 +237,8 @@ public class Main {
       InputStream buffer = new BufferedInputStream(file);
       input = new ObjectInputStream(buffer);
       s = (GameState)input.readObject();
+      //System.err.println("Internal state previous position was (" + s.player[GameState.POSITION_X] + "," + s.player[GameState.POSITION_Y] + ")");
+
     } catch (IOException ex) {
       if (ex instanceof FileNotFoundException)
         System.err.println("No game state exists on disk");

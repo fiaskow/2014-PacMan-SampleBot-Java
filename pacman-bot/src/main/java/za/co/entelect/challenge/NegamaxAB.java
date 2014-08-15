@@ -1,7 +1,9 @@
 package za.co.entelect.challenge;
 
+import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -42,13 +44,20 @@ public class NegamaxAB implements Strategy, Serializable {
     char moverSymbol = colour > 0 ? Main.PLAYER_SYMBOL : Main.OPPONENT_SYMBOL;
     int bestScore = Integer.MIN_VALUE;
     Move bestMove = null;
-    List<Move> moves = s.determineAllBasicMoves(moverSymbol,false); //TODO, change back to false to include back-up moves
+
+    boolean excludeHistory = excludeStepBack(s, depth, lastMove);
+
+    List<Move> moves = s.determineAllBasicMoves(moverSymbol,excludeHistory);
+
     assert moves.size() > 0 : "There are no moves???! Last move: " + lastMove + " Game state: " + s.toString();// + Main.printMaze(s, null, System.err);
-    moves = eval.orderMoves(moves, s);
+    //moves = eval.orderMoves(moves, s);
     for (Move m : moves) {
       assert m != null : "move is null, last move: " + lastMove;
       assert s != null : "game state is null";
-      m.score = -getMove(s.makeMove(m, true), m, depth - 1, -B, -A, -colour).score;
+      Move newMove = getMove(s.makeMove(m, true), m, depth - 1, -B, -A, -colour);
+      assert newMove != null;
+      m.score = -newMove.score;
+
       if (m.score >= B) {
         if (lastMove != null) lastMove.next = m;
         return m;
@@ -62,6 +71,53 @@ public class NegamaxAB implements Strategy, Serializable {
     }
     if (lastMove != null) lastMove.next = bestMove;
     return bestMove;
+  }
+
+  private boolean excludeStepBack(final GameState s, final int depth, final Move lastMove) {
+    if (depth == searchDepth) {return false;} //first move can consider backwards move.
+    if (lastMove != null && lastMove.dropPoison) {return false;}
+    if (ShortestPaths.shortestDistance(
+        Main.WIDTH * s.player[GameState.POSITION_X] + s.player[GameState.POSITION_Y],
+        Main.WIDTH * s.opponent[GameState.POSITION_X] + s.opponent[GameState.POSITION_Y]) < 2) {return false;}
+    return true;
+//    int[] mover = null;
+//    //speedup System.err.println("Calculating possible moves for " + moverChar);
+//    if (moverChar == Main.PLAYER_SYMBOL) {
+//      mover = s.player;
+//    }
+//    else if (moverChar == Main.OPPONENT_SYMBOL) {
+//      mover = s.opponent;
+//    }
+//    boolean pill = false;
+//    char ref;
+//    //Move down
+//    if (mover[GameState.POSITION_X] + 1 < Main.HEIGHT) {
+//      ref = s.maze[mover[GameState.POSITION_X] + 1][mover[GameState.POSITION_Y]];
+//      if (ref == Main.POISON_SYMBOL) return false;
+//      if (ref == Main.PILL_SYMBOL || ref == Main.BONUS_SYMBOL) pill = true;
+//    }
+//
+//    //Move up
+//    if (mover[GameState.POSITION_X] - 1 >= 0) {
+//      ref = s.maze[mover[GameState.POSITION_X] - 1][mover[GameState.POSITION_Y]];
+//      if (ref == Main.POISON_SYMBOL) return false;
+//      if (ref == Main.PILL_SYMBOL || ref == Main.BONUS_SYMBOL) pill = true;
+//    }
+//
+//    //Move Right
+//    if (mover[GameState.POSITION_Y] + 1 < Main.WIDTH) {
+//      ref = s.maze[mover[GameState.POSITION_X]][mover[GameState.POSITION_Y] + 1];
+//      if (ref == Main.POISON_SYMBOL) return false;
+//      if (ref == Main.PILL_SYMBOL || ref == Main.BONUS_SYMBOL) pill = true;
+//    }
+//
+//    //Move Left
+//    if (mover[GameState.POSITION_Y] - 1 >= 0) {
+//      ref = s.maze[mover[GameState.POSITION_X]][mover[GameState.POSITION_Y] - 1];
+//      if (ref == Main.POISON_SYMBOL) return false;
+//      if (ref == Main.PILL_SYMBOL || ref == Main.BONUS_SYMBOL) pill = true;
+//    }
+//    return pill;
   }
 
   @Override
@@ -81,7 +137,7 @@ public class NegamaxAB implements Strategy, Serializable {
       while (true) {
         //dont use Integer.MIN_VALUE and MAX_VALUE, when you negate it strange things happen. -(-2147483648) != 2147483648
         pvMove = getMove(s, null, currDepth, -2147483640, 2147483640, 1);
-        System.err.println("NegamaxAB evaluated " + nodesEvaluated + " nodes at depth " + currDepth + " for player " + Main.PLAYER_SYMBOL);
+        //System.err.println("NegamaxAB evaluated " + nodesEvaluated + " nodes at depth " + currDepth + " for player " + Main.PLAYER_SYMBOL);
         currDepth++;
       }
     } catch (TimeoutException e) {

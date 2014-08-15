@@ -12,7 +12,7 @@ public class ShortestPaths {
   private static byte[][] matrix;
   private static final String filename = "pathLookup.state";
 
-  private byte[][] lazyReadMatrix(String filename) {
+  private static byte[][] lazyReadMatrix(String filename) {
     byte[] buff = new byte[0];
     try {
       buff = Files.readAllBytes(Paths.get(filename));
@@ -27,14 +27,14 @@ public class ShortestPaths {
     return matrix;
   }
 
-  public byte shortestDistance(Point a, Point b) {
+  public static byte shortestDistance(Point a, Point b) {
     if (matrix == null) matrix = lazyReadMatrix(filename);
     int index1 = Main.WIDTH * a.x + a.y;
     int index2 = Main.WIDTH * b.x + b.y;
     return matrix[index1][index2];
   }
 
-  public byte shortestDistance(int index1, int index2) {
+  public static byte shortestDistance(int index1, int index2) {
     if (matrix == null) matrix = lazyReadMatrix(filename);
     return matrix[index1][index2];
   }
