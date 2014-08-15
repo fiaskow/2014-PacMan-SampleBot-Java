@@ -37,8 +37,6 @@ public class NegamaxAB implements Strategy, Serializable {
     if (depth == 0 || s.isEndState()) {
       if (System.currentTimeMillis() > Main.endtime) throw new TimeoutException();
       nodesEvaluated++;
-//      assert lastMove != null : "lastMove is null!";
-//      assert eval != null : "eval is null!";
       return new Move(lastMove.moverSymbol, lastMove.to,lastMove.dropPoison, colour * eval.evaluate(s));
     }
     char moverSymbol = colour > 0 ? Main.PLAYER_SYMBOL : Main.OPPONENT_SYMBOL;
@@ -49,13 +47,10 @@ public class NegamaxAB implements Strategy, Serializable {
 
     List<Move> moves = s.determineAllBasicMoves(moverSymbol,excludeHistory);
 
-    assert moves.size() > 0 : "There are no moves???! Last move: " + lastMove + " Game state: " + s.toString();// + Main.printMaze(s, null, System.err);
+    //assert moves.size() > 0 : "There are no moves???! Last move: " + lastMove + " Game state: " + s.toString();// + Main.printMaze(s, null, System.err);
     //moves = eval.orderMoves(moves, s);
     for (Move m : moves) {
-      assert m != null : "move is null, last move: " + lastMove;
-      assert s != null : "game state is null";
       Move newMove = getMove(s.makeMove(m, true), m, depth - 1, -B, -A, -colour);
-      assert newMove != null;
       m.score = -newMove.score;
 
       if (m.score >= B) {
@@ -132,6 +127,9 @@ public class NegamaxAB implements Strategy, Serializable {
   public Move getMoveIterativeDeepening(GameState s) {
     nodesEvaluated = 0;
     currDepth = searchDepth;
+    //default move if we time out is a random one.
+    pvMove = s.determineAllBasicMoves(Main.PLAYER_SYMBOL,true).get(0);
+
     try {
       //Iterative deepening
       while (true) {

@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.rmi.server.ServerRef;
 import java.util.*;
 import java.util.List;
@@ -74,7 +75,7 @@ public class Main {
       player = previousState.playerObject;
     } else {
       currentState = GameState.initGameState(maze);             //This is a new game
-      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
+      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),28),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
       //player = new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true);
       //System.err.println("========= Starting new game. ========== " + (new Date(System.currentTimeMillis()).toString() ));
     }
@@ -156,7 +157,6 @@ public class Main {
       s.append("PV moves:" + p.getStrategy().getPrincipalVariation().get(0).score + " "
           + p.getStrategy().getPrincipalVariation().toString());
     }
-    stream.println(s);
     if (p == null || p.getStrategy() == null) {
       printMaze(state, new ArrayList<Move>(), stream);
     }
@@ -166,6 +166,7 @@ public class Main {
     calctime = System.currentTimeMillis() - starttime;
     s.append("CalculationTime: ");
     s.append(calctime + "ms");
+    stream.println(s);
   }
 
   private static void writeMaze(char[][] maze, String filePath) {
@@ -207,6 +208,9 @@ public class Main {
     state.playerObject = pObject;
     try {
       Path internalStateFile = FileSystems.getDefault().getPath(Main.PLAYER_SYMBOL+INTERNAL_FILE_NAME);
+//      Path backupStateFile = FileSystems.getDefault().getPath("back" + Main.PLAYER_SYMBOL + INTERNAL_FILE_NAME);
+//      if (Files.exists(internalStateFile))
+//        Files.move(internalStateFile,backupStateFile, StandardCopyOption.REPLACE_EXISTING);
       Files.deleteIfExists(internalStateFile);
       file = new FileOutputStream(Main.PLAYER_SYMBOL+INTERNAL_FILE_NAME);
       OutputStream buffer = new BufferedOutputStream(file);

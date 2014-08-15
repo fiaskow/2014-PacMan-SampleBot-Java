@@ -306,8 +306,9 @@ public class GameState implements Serializable {
 
     //harness may have teleported us
     Point myPos = getCurrentPosition(newMaze, Main.PLAYER_SYMBOL);
+    //System.err.println("My new position is " + myPos.x + "," + myPos.y);
     if (player[POSITION_X] != myPos.x || player[POSITION_Y] != myPos.y) {
-      //System.err.println("Player (" + Main.PLAYER_SYMBOL + ") has been teleported. Updating position");
+      System.err.println("Player (" + Main.PLAYER_SYMBOL + ") has been teleported. Updating position");
       player[POSITION_X] = myPos.x;
       player[POSITION_Y] = myPos.y;
       // DEBUG make a backup copy of the internal state.
