@@ -124,8 +124,8 @@ public class GameState implements Serializable {
       }
     }
 
-    newMaze[mover[POSITION_X]][mover[POSITION_Y]] = move.moverSymbol;
     newMaze[other[POSITION_X]][other[POSITION_Y]] = oppSymbol;
+    newMaze[mover[POSITION_X]][mover[POSITION_Y]] = move.moverSymbol;
     return new GameState(newMaze,updatedPlayer,updatedOpponent);
   }
 
