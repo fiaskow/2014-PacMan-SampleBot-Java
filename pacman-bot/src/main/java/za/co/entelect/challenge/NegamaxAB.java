@@ -17,6 +17,7 @@ public class NegamaxAB implements Strategy, Serializable {
   private int searchDepth;
   private int currDepth;
   private Move pvMove = null;
+  private boolean stillSearching = true;
 
   public NegamaxAB(Evaluator evaluator, int searchDepth){
     this.eval = evaluator;
@@ -34,7 +35,7 @@ public class NegamaxAB implements Strategy, Serializable {
    * @return best move for colour
    */
   public Move getMove(GameState s, Move lastMove, int depth, int A, int B, int colour) {
-    if (depth == 0 || s.isEndState()) {
+    if (depth == 0 || s.isEndState(stillSearching)) {
       if (System.currentTimeMillis() > Main.endtime) throw new TimeoutException();
       nodesEvaluated++;
       return new Move(lastMove.moverSymbol, lastMove.to,lastMove.dropPoison, colour * eval.evaluate(s));
@@ -69,7 +70,7 @@ public class NegamaxAB implements Strategy, Serializable {
   }
 
   private boolean excludeStepBack(final GameState s, final int depth, final Move lastMove) {
-    if (depth == searchDepth) {return false;} //first move can consider backwards move.
+    if (depth == currDepth) {return false;} //first move can consider backwards move.
     if (lastMove != null && lastMove.dropPoison) {return false;}
     if (ShortestPaths.shortestDistance(
         Main.WIDTH * s.player[GameState.POSITION_X] + s.player[GameState.POSITION_Y],
@@ -125,6 +126,9 @@ public class NegamaxAB implements Strategy, Serializable {
   }
 
   public Move getMoveIterativeDeepening(GameState s) {
+    //Switch to a different end state evaluation after a bot has won.
+    if (stillSearching && (s.player[GameState.SCORE] >= 110 || s.opponent[GameState.SCORE] >= 110))
+      stillSearching = false;
     nodesEvaluated = 0;
     currDepth = searchDepth;
     //default move if we time out is a random one.
@@ -139,7 +143,7 @@ public class NegamaxAB implements Strategy, Serializable {
         currDepth++;
       }
     } catch (TimeoutException e) {
-      System.err.println("Your calculation time is up. Stopping NegamaxAB at depth " + (currDepth - 1));
+      System.err.println("NegamaxAB depth " + (currDepth - 1) + ", Score " + pvMove.score);
       //We didn't get to finish the iteration, so pvMove is still set to the best move
       //from the previous deepening.
     }

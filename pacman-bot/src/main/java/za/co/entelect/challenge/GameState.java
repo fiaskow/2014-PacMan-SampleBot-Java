@@ -326,8 +326,12 @@ public class GameState implements Serializable {
     return newState;
   }
 
-  public boolean isEndState() {
-    return (219 - player[SCORE] - opponent[SCORE]) == 0;
+  public boolean isEndState(boolean stillSearching) {
+    //consider a winning score an end state for Minimax search
+    if (stillSearching)
+      return player[SCORE] >= 110 || opponent[SCORE] >= 110;
+    else
+      return (219 - player[SCORE] - opponent[SCORE]) == 0;
   }
 
 //  @Override

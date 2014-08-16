@@ -34,6 +34,10 @@ public class Quiesce implements Evaluator, Serializable {
             score += 30;
         }
       }
+    //this is a win for us!
+      if (state.player[GameState.SCORE] >= 110)
+        if (state.opponent[GameState.SCORE] < 110)
+          score += 100000;
 //    if (state.player[GameState.POSITION_X] != state.player[GameState.PREVIOUS_X] ||
 //        state.player[GameState.POSITION_Y] != state.player[GameState.PREVIOUS_Y] )
 //      score += 1; //Bias any move that is not going to the
