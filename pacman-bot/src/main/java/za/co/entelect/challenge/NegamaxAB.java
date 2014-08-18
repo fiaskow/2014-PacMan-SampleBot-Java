@@ -70,7 +70,7 @@ public class NegamaxAB implements Strategy, Serializable {
   }
 
   private boolean excludeStepBack(final GameState s, final int depth, final Move lastMove) {
-    if (depth == currDepth) {return false;} //first move can consider backwards move.
+    if (depth == currDepth || depth == currDepth-1) {return false;} //first and second (opponent's) move can consider backwards move.
     if (lastMove != null && lastMove.dropPoison) {return false;}
     if (ShortestPaths.shortestDistance(
         Main.WIDTH * s.player[GameState.POSITION_X] + s.player[GameState.POSITION_Y],

@@ -15,7 +15,7 @@ public class Quiesce implements Evaluator, Serializable {
 
   @Override
   public int evaluate(GameState state) {
-    int score = (state.player[GameState.SCORE] - state.opponent[GameState.SCORE]) << 8;
+    int score = (state.player[GameState.SCORE] - state.opponent[GameState.SCORE]) << 9;
     //(state.maze[2][1] == Main.BONUS_SYMBOL) ? ShortestPaths.shortestDistance();
 
     for (int i = 1; i < Main.HEIGHT - 1; i++)

@@ -100,7 +100,7 @@ public class Main {
     //printMaze(newState,new ArrayList<Move>(), System.err);
     writeMaze(newState.maze, OUTPUT_FILE_NAME);
     writeGameState(newState, player);
-    if (printBoard) printGameState(newState,player,System.out);
+    if (printBoard) printGameState(newState,player,System.err);
     System.err.println(System.currentTimeMillis() - starttime + " ms");
     System.err.println("========= DONE =========");
   }
@@ -111,24 +111,19 @@ public class Main {
     for (int x = 0; x < HEIGHT; x++) {
       for (int y = 0; y < WIDTH; y++) {
         s.append(state.maze[x][y]);
-//        if (state.maze[x][y] == PLAYER_SYMBOL ||
-//            state.maze[x][y] == OPPONENT_SYMBOL ||
-//            state.maze[x][y] == PILL_SYMBOL ||
-//            state.maze[x][y] == BONUS_SYMBOL ||
-//            state.maze[x][y] == '!') {
-          int pvMoveNumber = -1;
+          Move pvm = null;
           for (Move m : principalVariation) {
             if (m.to.x == x && m.to.y == y) {
-              pvMoveNumber = principalVariation.indexOf(m);
+              pvm = m;
               break;
             }
           }
-
-          s.append(pvMoveNumber > -1 ? "0" : state.maze[x][y] == '.' ? " " : state.maze[x][y] );
-//        }
-//        else {
-//          s.append(state.maze[x][y]);
-//        }
+          if (pvm != null) {
+            s.append(Character.toLowerCase(pvm.moverSymbol));
+          }
+          else {
+            s.append(state.maze[x][y]);
+          }
       }
       if (x != HEIGHT - 1) s.append('\n');
     }
@@ -163,9 +158,6 @@ public class Main {
     else {
       printMaze(state, p.getStrategy().getPrincipalVariation(), stream);
     }
-    calctime = System.currentTimeMillis() - starttime;
-    s.append("CalculationTime: ");
-    s.append(calctime + "ms");
     stream.println(s);
   }
 
