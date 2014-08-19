@@ -26,7 +26,9 @@ public class Player implements Serializable {
    */
   public GameState makeMove(final GameState s, final boolean performTeleport)
   {
-    Move m = iterative ? strategy.getMoveIterativeDeepening(s) : strategy.getMove(s);
+    GameState copy = s.clone();
+    //Get Move is destructive on the GameState, so only do it on a copy.
+    Move m = iterative ? strategy.getMoveIterativeDeepening(copy) : strategy.getMove(copy);
     pv = strategy.getPrincipalVariation();
     return s.makeMove(m,performTeleport);
   }

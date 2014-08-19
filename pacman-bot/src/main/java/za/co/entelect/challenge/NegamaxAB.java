@@ -2,8 +2,7 @@ package za.co.entelect.challenge;
 
 import java.awt.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -18,6 +17,7 @@ public class NegamaxAB implements Strategy, Serializable {
   private int currDepth;
   private Move pvMove = null;
   private boolean stillSearching = true;
+  private Deque<int[]> us;
 
   public NegamaxAB(Evaluator evaluator, int searchDepth){
     this.eval = evaluator;
@@ -51,8 +51,10 @@ public class NegamaxAB implements Strategy, Serializable {
     //assert moves.size() > 0 : "There are no moves???! Last move: " + lastMove + " Game state: " + s.toString();// + Main.printMaze(s, null, System.err);
     //moves = eval.orderMoves(moves, s);
     for (Move m : moves) {
-      Move newMove = getMove(s.makeMove(m, true), m, depth - 1, -B, -A, -colour);
-      m.score = -newMove.score;
+      us.push(s.makeMove2(m,true));
+      Move nextMove = getMove(s, m, depth - 1, -B, -A, -colour);
+      s.unmakeMove(us.pop());
+      m.score = -nextMove.score;
 
       if (m.score >= B) {
         if (lastMove != null) lastMove.next = m;
@@ -119,12 +121,18 @@ public class NegamaxAB implements Strategy, Serializable {
   @Override
   public Move getMove(GameState s) {
     nodesEvaluated = 0;
+    us = new ArrayDeque<int[]>(searchDepth);
     //dont use Integer.MIN_VALUE and MAX_VALUE, when you negate it strange things happen. -(-2147483648) != 2147483648
     pvMove = getMove(s, null, searchDepth, -2147483640, 2147483640, 1);
     System.err.println("NegamaxAB evaluated " + nodesEvaluated + " nodes at depth " + searchDepth + " for player " + Main.PLAYER_SYMBOL);
     return pvMove;
   }
 
+  /**
+   * Deepen the depth that the search wil start at while there is still time left. This method is destructive on the GameState
+   * @param s GameState to start from, will be modified, so doen't rely on it.
+   * @return The Principal Variation move.
+   */
   public Move getMoveIterativeDeepening(GameState s) {
     //Switch to a different end state evaluation after a bot has won.
     if (stillSearching && (s.player[GameState.SCORE] >= 110 || s.opponent[GameState.SCORE] >= 110))
@@ -137,6 +145,7 @@ public class NegamaxAB implements Strategy, Serializable {
     try {
       //Iterative deepening
       while (true) {
+        us = new ArrayDeque<int[]>(currDepth);
         //dont use Integer.MIN_VALUE and MAX_VALUE, when you negate it strange things happen. -(-2147483648) != 2147483648
         pvMove = getMove(s, null, currDepth, -2147483640, 2147483640, 1);
         //System.err.println("NegamaxAB evaluated " + nodesEvaluated + " nodes at depth " + currDepth + " for player " + Main.PLAYER_SYMBOL);

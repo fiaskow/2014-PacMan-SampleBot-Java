@@ -27,8 +27,6 @@ public class Main {
   public static final char POISON_SYMBOL = '!';
   public static final String OUTPUT_FILE_NAME = "game.state";
   public static final String INTERNAL_FILE_NAME = "internal.state";
-  //The coordinate values will contain this value while player is
-  // carrying poison pill, or it is not on the map anymore
   public static final int CARRY_POISON = 1;
   public static final int DROPPED_POISON = 0;
   public static boolean PERFORM_TELEPORT = false;
@@ -75,7 +73,7 @@ public class Main {
       player = previousState.playerObject;
     } else {
       currentState = GameState.initGameState(maze);             //This is a new game
-      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),28),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
+      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
       //player = new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true);
       //System.err.println("========= Starting new game. ========== " + (new Date(System.currentTimeMillis()).toString() ));
     }

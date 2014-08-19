@@ -2,10 +2,8 @@ package za.co.entelect.challenge;
 
 
 import java.awt.*;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.nio.file.*;
 import java.util.*;
 import java.util.List;
 
@@ -16,7 +14,6 @@ import java.util.List;
  */
 public class GameState implements Serializable {
   private static final long serialVersionUID = 9282786647133L;
-  private static final Stack<int[]> statestack = new Stack<int[]>();
 
   public final char[][] maze;
   public final int[] player;
@@ -28,7 +25,10 @@ public class GameState implements Serializable {
   public static final int PREVIOUS_X = 2;
   public static final int PREVIOUS_Y = 3;
   public static final int HAS_POISON = 4;
-  public static final int SCORE = 5;
+  public static final int SCORE      = 5;
+  public static final int UN_PLAYER = 0;
+  public static final int UN_POISON = 1;
+  public static final int UN_OFFSET = 2;
 
 
   public GameState (final char[][] maze, final int[] player, final int[] opponent) {
@@ -118,6 +118,8 @@ public class GameState implements Serializable {
       //if player eats a poison pil, teleport player to center
       if (oldMaze[move.to.x][move.to.y] == Main.POISON_SYMBOL) {
         newMaze[mover[POSITION_X]][mover[POSITION_Y]] = ' ';
+        mover[PREVIOUS_X] = mover[POSITION_X];
+        mover[PREVIOUS_Y] = mover[POSITION_Y];
         mover[POSITION_X] = Main.SPAWN_X;
         mover[POSITION_Y] = Main.SPAWN_Y;
         //speedup System.err.println("Player ate a Poison Pill, teleporting to the Respawn area.");
@@ -129,12 +131,126 @@ public class GameState implements Serializable {
     return new GameState(newMaze,updatedPlayer,updatedOpponent);
   }
 
-  public GameState makeMove2(Move move, final boolean performTeleport) {
-    return this;
+  public int[] makeMove2(Move move, final boolean performTeleport) {
+    int[] mover;
+    int[] other;
+    int[] unmake = new int[PLAYER_SIZE*2+UN_OFFSET];
+    char oppSymbol;
+
+    //determine which player array to update based on the symbol.
+    if (move.moverSymbol == Main.PLAYER_SYMBOL) {
+      mover = player;
+      other = opponent;
+      unmake[UN_PLAYER] = 0;
+      oppSymbol = Main.OPPONENT_SYMBOL;
+    } else {
+      mover = opponent;
+      other = player;
+      unmake[UN_PLAYER] = 1;
+      oppSymbol = Main.PLAYER_SYMBOL;
+    }
+
+    //keep player buffers for unmake move
+    System.arraycopy(mover,0,unmake,UN_OFFSET,PLAYER_SIZE);
+    System.arraycopy(other,0,unmake,UN_OFFSET+PLAYER_SIZE,PLAYER_SIZE);
+
+    //keep history of the current position
+    mover[PREVIOUS_X] = mover[POSITION_X];
+    mover[PREVIOUS_Y] = mover[POSITION_Y];
+
+    //Calculate moving player's score delta
+    int addScore;
+    switch (maze[move.to.x][move.to.y]) {
+      //Eat a pill + 1
+      case Main.PILL_SYMBOL : addScore = 1;
+        break;
+      //Eat a bonus pill
+      case Main.BONUS_SYMBOL : addScore = 10;
+        break;
+      default: addScore = 0;
+    }
+
+    mover[SCORE] += addScore;
+
+    //set old position of player on maze
+    if (move.dropPoison) {
+      mover[HAS_POISON] = Main.DROPPED_POISON;
+      maze[mover[PREVIOUS_X]][mover[PREVIOUS_Y]] = '!';
+    } else {
+      maze[mover[PREVIOUS_X]][mover[PREVIOUS_Y]] = ' ';
+    }
+
+    //update player position .. this can change later if she is teleported
+    mover[POSITION_X] = move.to.x;
+    mover[POSITION_Y] = move.to.y;
+
+    //Make teleport moves that would usually be handled by the competition harness.
+    //This will overwrite a previous move made in the code above.
+    if (performTeleport) {
+      //if player eats the opponent, teleport her to center
+      if (maze[move.to.x][move.to.y] == oppSymbol) {
+        //maze[other[POSITION_X]][other[POSITION_Y]] = ' ';
+        other[POSITION_X] = Main.SPAWN_X;
+        other[POSITION_Y] = Main.SPAWN_Y;
+        //speedup System.err.println("Player ate opponent, teleporting opponent to Respawn area.");
+      }
+
+      //if player eats a poison pil, teleport player to center
+      else if (maze[mover[POSITION_X]][mover[POSITION_Y]] == Main.POISON_SYMBOL) {
+        maze[mover[POSITION_X]][mover[POSITION_Y]] = ' ';
+        mover[PREVIOUS_X] = mover[POSITION_X];
+        mover[PREVIOUS_Y] = mover[POSITION_Y];
+        mover[POSITION_X] = Main.SPAWN_X;
+        mover[POSITION_Y] = Main.SPAWN_Y;
+        unmake[UN_POISON] = 1;
+        //speedup System.err.println("Player ate a Poison Pill, teleporting to the Respawn area.");
+      }
+    }
+
+    maze[other[POSITION_X]][other[POSITION_Y]] = oppSymbol;
+    maze[mover[POSITION_X]][mover[POSITION_Y]] = move.moverSymbol;
+    return unmake;
   }
 
-  public boolean insideRespawn(int[] mover) {
-    return mover[POSITION_X] >= 9 && mover[POSITION_X] <= 11 && mover[POSITION_Y] == 9;
+  public void unmakeMove(int[] unmake) {
+    int[] mover;
+    int[] other;
+    char moverChar;
+    char opponChar;
+    if (unmake[UN_PLAYER] == 0) {
+      mover = player;
+      other = opponent;
+      moverChar = Main.PLAYER_SYMBOL;
+      opponChar = Main.OPPONENT_SYMBOL;
+    } else {
+      mover = opponent;
+      other = player;
+      moverChar = Main.OPPONENT_SYMBOL;
+      opponChar = Main.PLAYER_SYMBOL;
+    }
+
+    int delta = mover[SCORE] - unmake[UN_OFFSET+SCORE];
+    char restore;
+    if (delta == 1)
+      restore = Main.PILL_SYMBOL;
+    else if (delta == 10)
+      restore = Main.BONUS_SYMBOL;
+    else
+      restore = ' ';
+
+    //This is still the later position
+    maze[mover[POSITION_X]][mover[POSITION_Y]] = restore;
+    maze[other[POSITION_X]][other[POSITION_Y]] = ' ';
+    if (unmake[UN_POISON] == 1)
+      maze[mover[PREVIOUS_X]][mover[PREVIOUS_Y]] = Main.POISON_SYMBOL;
+
+    //Restore old buffers
+    System.arraycopy(unmake,UN_OFFSET,mover,0,PLAYER_SIZE);
+    System.arraycopy(unmake,UN_OFFSET+PLAYER_SIZE,other,0,PLAYER_SIZE);
+
+    //restore player symbols
+    maze[mover[POSITION_X]][mover[POSITION_Y]] = moverChar;
+    maze[other[POSITION_X]][other[POSITION_Y]] = opponChar;
   }
 
   public java.util.List<Move> determineAllBasicMoves(char moverChar, boolean excludeHistory) {
@@ -149,7 +265,7 @@ public class GameState implements Serializable {
     else {
       throw new IllegalArgumentException("Unknown player symbol.");
     }
-    java.util.List<Move> moveList = new ArrayList<Move>();
+    java.util.List<Move> moveList = new LinkedList<Move>();// ArrayList<Move>();
     boolean hasPoison = mover[HAS_POISON] == Main.CARRY_POISON;
 
     //if inside respawn area
@@ -366,6 +482,17 @@ public class GameState implements Serializable {
       if (x != Main.HEIGHT - 1) s.append('\n');
     }
     stream.println(s);
+  }
+
+  public GameState clone() {
+    int[] nPlayer = player.clone();
+    int[] nOppone = opponent.clone();
+    //clone maze
+    char[][] newMaze = new char[maze.length][];
+    for (int i = 0; i < maze.length; i++) {
+      newMaze[i] = maze[i].clone();
+    }
+    return new GameState(newMaze,nPlayer,nOppone);
   }
 }
 
