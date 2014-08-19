@@ -614,16 +614,16 @@ public class MoveTest {
 
           for (Move m : moves) {
             GameState copy = copy(s);
-            GameState expected = s.makeMove(m,true);
-            copy.makeMove2(m,true);
+            GameState expected = s.makeMove(m, true);
+            copy.makeMove2(m, true);
             assertArrayEquals(expected.player, copy.player);
             assertArrayEquals(expected.opponent, copy.opponent);
             for (int l = 0; l < expected.maze.length; l++)
               assertArrayEquals(expected.maze[l], copy.maze[l]);
 
             copy = copy(s);
-            expected = s.makeMove(m,false);
-            copy.makeMove2(m,false);
+            expected = s.makeMove(m, false);
+            copy.makeMove2(m, false);
             assertArrayEquals(expected.player,copy.player);
             assertArrayEquals(expected.opponent,copy.opponent);
             for (int l = 0; l < expected.maze.length; l++)
@@ -728,7 +728,7 @@ public class MoveTest {
     NegamaxAB n = new NegamaxAB(new SimpleEval(),60);
     Main.endtime = Long.MAX_VALUE;
     n.getMove(s);
-    assertArrayEquals(backup.player,s.player);
+    assertArrayEquals(backup.player, s.player);
     assertArrayEquals(backup.opponent,s.opponent);
     for (int l = 0; l < backup.maze.length; l++)
       assertArrayEquals(backup.maze[l],s.maze[l]);
@@ -764,14 +764,14 @@ public class MoveTest {
     GameState s = GameState.initGameState(oldMaze);
     //GameState s = new GameState(oldMaze, new int[]{10,4, 9, 4, Main.CARRY_POISON,12}, new int[]{15,14,16,14, Main.DROPPED_POISON,11});
     GameState backup = copy(s);
-    NegamaxAB n = new NegamaxAB(new SimpleEval(),30);
+    NegamaxAB n = new NegamaxAB(new Quiesce2(new ArrayList<Move>()),31);
     Main.endtime = Long.MAX_VALUE;
     n.getMove(s);
-    assertArrayEquals(backup.player,s.player);
+    assertArrayEquals(backup.player, s.player);
     assertArrayEquals(backup.opponent,s.opponent);
     for (int l = 0; l < backup.maze.length; l++)
       assertArrayEquals(backup.maze[l],s.maze[l]);
-    //s.printMaze(new ArrayList<Move>(), System.err);
+    s.printMaze(n.getPrincipalVariation(), System.err);
   }
 
   @Test

@@ -51,6 +51,7 @@ public class NegamaxAB implements Strategy, Serializable {
     //assert moves.size() > 0 : "There are no moves???! Last move: " + lastMove + " Game state: " + s.toString();// + Main.printMaze(s, null, System.err);
     //moves = eval.orderMoves(moves, s);
     for (Move m : moves) {
+      m.previous = lastMove; //build a chain forward
       us.push(s.makeMove2(m,true));
       Move nextMove = getMove(s, m, depth - 1, -B, -A, -colour);
       s.unmakeMove(us.pop());
@@ -67,16 +68,22 @@ public class NegamaxAB implements Strategy, Serializable {
           A = m.score;
       }
     }
-    if (lastMove != null) lastMove.next = bestMove;
+    if (lastMove != null) lastMove.next = bestMove; //build a chain of PV moves.
     return bestMove;
   }
 
   private boolean excludeStepBack(final GameState s, final int depth, final Move lastMove) {
-    if (depth == currDepth || depth == currDepth-1) {return false;} //first and second (opponent's) move can consider backwards move.
-    if (lastMove != null && lastMove.dropPoison) {return false;}
-    if (ShortestPaths.shortestDistance(
+    if (depth == currDepth || depth == currDepth-1)
+      {return false;} //first and second (opponent's) move can consider backwards move.
+    if (lastMove != null
+        && lastMove.previous != null
+        && lastMove.previous.dropPoison)
+      {return false;}
+    byte dist = ShortestPaths.shortestDistance(
         Main.WIDTH * s.player[GameState.POSITION_X] + s.player[GameState.POSITION_Y],
-        Main.WIDTH * s.opponent[GameState.POSITION_X] + s.opponent[GameState.POSITION_Y]) < 2) {return false;}
+        Main.WIDTH * s.opponent[GameState.POSITION_X] + s.opponent[GameState.POSITION_Y]);
+    if (dist < 2 && dist > 0)
+      {return false;}
     return true;
 //    int[] mover = null;
 //    //speedup System.err.println("Calculating possible moves for " + moverChar);

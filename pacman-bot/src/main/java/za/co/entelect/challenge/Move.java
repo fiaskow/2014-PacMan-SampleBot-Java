@@ -16,6 +16,7 @@ public class Move implements Serializable {
   public final boolean dropPoison;
   public int score;
   public Move next;
+  public Move previous;
 
   public Move(char moverSymbol, Point to, boolean dropPoison) {
     this.moverSymbol = moverSymbol;
