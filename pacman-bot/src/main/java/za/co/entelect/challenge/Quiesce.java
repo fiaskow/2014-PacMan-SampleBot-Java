@@ -14,7 +14,7 @@ public class Quiesce implements Evaluator, Serializable {
   public Quiesce(List<Move> principalVariation) { this.principalVariation = principalVariation; }
 
   @Override
-  public int evaluate(GameState state) {
+  public int evaluate(GameState state, Move lastMove) {
     int score = (state.player[GameState.SCORE] - state.opponent[GameState.SCORE]) << 9;
     //(state.maze[2][1] == Main.BONUS_SYMBOL) ? ShortestPaths.shortestDistance();
 
@@ -46,14 +46,6 @@ public class Quiesce implements Evaluator, Serializable {
 
   @Override
   public List<Move> orderMoves(List<Move> moves, final GameState s) {
-    Collections.sort(moves,new Comparator<Move>() {
-      @Override
-      public int compare(Move o1, Move o2) {
-        //if move is in the pv, then it gets priority
-
-        return evaluate(s.makeMove(o2,true)) - evaluate(s.makeMove(o1,true));
-      }
-    });
     return moves;
   }
 }

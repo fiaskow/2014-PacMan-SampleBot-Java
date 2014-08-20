@@ -24,20 +24,12 @@ public class Quiesce2 implements Evaluator, Serializable {
 
   @Override
   public List<Move> orderMoves(List<Move> moves, final GameState s) {
-    Collections.sort(moves,new Comparator<Move>() {
-      @Override
-      public int compare(Move o1, Move o2) {
-        //if move is in the pv, then it gets priority
-
-        return evaluate(s.makeMove(o2,true)) - evaluate(s.makeMove(o1,true));
-      }
-    });
     return moves;
   }
 
 
   @Override
-  public int evaluate(GameState state) {
+  public int evaluate(GameState state, Move lastMove) {
     boolean moreBonus = true;
     int score = 0;
     score += state.player[GameState.SCORE] - state.opponent[GameState.SCORE];

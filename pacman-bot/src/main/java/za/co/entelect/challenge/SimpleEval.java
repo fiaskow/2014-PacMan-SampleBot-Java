@@ -10,7 +10,7 @@ import java.util.List;
 public class SimpleEval implements Evaluator {
 
   @Override
-  public int evaluate(GameState state) {
+  public int evaluate(GameState state, Move lastMove) {
     return state.player[GameState.SCORE] - state.opponent[GameState.SCORE];
   }
 
@@ -19,7 +19,7 @@ public class SimpleEval implements Evaluator {
     Collections.sort(moves, new Comparator<Move>() {
       @Override
       public int compare(Move o1, Move o2) {
-        return evaluate(s.makeMove(o2, true)) - evaluate(s.makeMove(o1, true));
+        return evaluate(s.makeMove(o2, true),o2) - evaluate(s.makeMove(o1, true),o1);
       }
     });
     return moves;

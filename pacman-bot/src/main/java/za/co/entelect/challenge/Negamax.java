@@ -35,7 +35,7 @@ public class Negamax implements Strategy, Serializable {
   public Move getMove(GameState s, Move lastMove, int depth, int colour) {
     if (depth == 0) {     //TODO check for end state?
       nodesEvaluated++;
-      return new Move(lastMove.moverSymbol, lastMove.to,lastMove.dropPoison, colour * eval.evaluate(s));
+      return new Move(lastMove.moverSymbol, lastMove.to,lastMove.dropPoison, colour * eval.evaluate(s, lastMove));
     }
     char moverSymbol = colour > 0 ? Main.PLAYER_SYMBOL : Main.OPPONENT_SYMBOL;
     int bestScore = Integer.MIN_VALUE;

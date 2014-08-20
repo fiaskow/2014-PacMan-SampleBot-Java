@@ -1,12 +1,9 @@
 package za.co.entelect.challenge;
 
-import java.awt.*;
 import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.rmi.server.ServerRef;
 import java.util.*;
 import java.util.List;
 
@@ -57,7 +54,7 @@ public class Main {
     printBoard = Boolean.parseBoolean(args[3]);
     endtime = starttime + Integer.parseInt(args[4]);
     if (args.length > 5) PERFORM_TELEPORT = Boolean.parseBoolean(args[5]);
-    System.err.println("Player symbol: " + PLAYER_SYMBOL);
+    //System.err.println("Player symbol: " + PLAYER_SYMBOL);
     //System.err.println("Opponent symbol: " + OPPONENT_SYMBOL);
     //System.err.println("Printing board " + printBoard);
     char[][] maze = ReadMaze(args[0]);
@@ -73,7 +70,7 @@ public class Main {
       player = previousState.playerObject;
     } else {
       currentState = GameState.initGameState(maze);             //This is a new game
-      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce3(),30),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
+      player = new Player(new NegamaxAB(new Quiesce3(),30),true);
       //player = new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true);
       //System.err.println("========= Starting new game. ========== " + (new Date(System.currentTimeMillis()).toString() ));
     }
@@ -98,9 +95,11 @@ public class Main {
     //printMaze(newState,new ArrayList<Move>(), System.err);
     writeMaze(newState.maze, OUTPUT_FILE_NAME);
     writeGameState(newState, player);
-    if (printBoard) printGameState(newState,player,System.err);
-    System.err.println(System.currentTimeMillis() - starttime + " ms");
-    System.err.println("========= DONE =========");
+    if (printBoard) {
+      printGameState(newState,player,System.err);
+      System.err.println(System.currentTimeMillis() - starttime + " ms");
+      System.err.println("========= DONE =========");
+    }
   }
 
 

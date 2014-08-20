@@ -335,8 +335,11 @@ public class GameState implements Serializable {
   }
 
   private void addMoveToList(final List<Move> moveList, final char moverSymbol, final Point to, final boolean hasPoison) {
-    moveList.add(new Move(moverSymbol, to,false));
-    if (hasPoison) moveList.add(new Move(moverSymbol,to,true));
+    int score = 0;
+    if (maze[to.x][to.y] == Main.PILL_SYMBOL) score = 1;
+    else if (maze[to.x][to.y] == Main.BONUS_SYMBOL) score = 10;
+    moveList.add(new Move(moverSymbol, to,false,score));
+    if (hasPoison) moveList.add(new Move(moverSymbol,to,true,score));
   }
 
   public boolean playerHasPoison() {

@@ -38,7 +38,7 @@ public class NegamaxAB implements Strategy, Serializable {
     if (depth == 0 || s.isEndState(stillSearching)) {
       if (System.currentTimeMillis() > Main.endtime) throw new TimeoutException();
       nodesEvaluated++;
-      return new Move(lastMove.moverSymbol, lastMove.to,lastMove.dropPoison, colour * eval.evaluate(s));
+      return new Move(lastMove.moverSymbol, lastMove.to,lastMove.dropPoison, colour * eval.evaluate(s,lastMove));
     }
     char moverSymbol = colour > 0 ? Main.PLAYER_SYMBOL : Main.OPPONENT_SYMBOL;
     int bestScore = Integer.MIN_VALUE;
@@ -72,18 +72,25 @@ public class NegamaxAB implements Strategy, Serializable {
     return bestMove;
   }
 
-  private boolean excludeStepBack(final GameState s, final int depth, final Move lastMove) {
+  public boolean excludeStepBack(final GameState s, final int depth, final Move lastMove) {
     if (depth == currDepth || depth == currDepth-1)
       {return false;} //first and second (opponent's) move can consider backwards move.
     if (lastMove != null
         && lastMove.previous != null
         && lastMove.previous.dropPoison)
-      {return false;}
+      {return false;} //Consider backwards move when poison dropped.
     byte dist = ShortestPaths.shortestDistance(
         Main.WIDTH * s.player[GameState.POSITION_X] + s.player[GameState.POSITION_Y],
         Main.WIDTH * s.opponent[GameState.POSITION_X] + s.opponent[GameState.POSITION_Y]);
     if (dist < 2 && dist > 0)
-      {return false;}
+      {return false;} //Consider back step when we are next to the opponent
+    if (lastMove.previous != null && lastMove.previous.score == 1) {
+      if (s.maze[lastMove.previous.to.x + 1][lastMove.previous.to.y] != Main.PILL_SYMBOL)
+        if (s.maze[lastMove.previous.to.x - 1][lastMove.previous.to.y] != Main.PILL_SYMBOL)
+          if (lastMove.previous.to.y - 1 >= 0 && s.maze[lastMove.previous.to.x][lastMove.previous.to.y - 1] != Main.PILL_SYMBOL)
+            if (lastMove.previous.to.y + 1 < Main.WIDTH && s.maze[lastMove.previous.to.x][lastMove.previous.to.y + 1] != Main.PILL_SYMBOL)
+              {return false;}  //After eating an isolated pill, you can step back
+    }
     return true;
 //    int[] mover = null;
 //    //speedup System.err.println("Calculating possible moves for " + moverChar);
@@ -131,7 +138,7 @@ public class NegamaxAB implements Strategy, Serializable {
     us = new ArrayDeque<int[]>(searchDepth);
     //dont use Integer.MIN_VALUE and MAX_VALUE, when you negate it strange things happen. -(-2147483648) != 2147483648
     pvMove = getMove(s, null, searchDepth, -2147483640, 2147483640, 1);
-    System.err.println("NegamaxAB evaluated " + nodesEvaluated + " nodes at depth " + searchDepth + " for player " + Main.PLAYER_SYMBOL);
+    //System.err.println("NegamaxAB evaluated " + nodesEvaluated + " nodes at depth " + searchDepth + " for player " + Main.PLAYER_SYMBOL);
     return pvMove;
   }
 
@@ -159,11 +166,11 @@ public class NegamaxAB implements Strategy, Serializable {
         currDepth++;
       }
     } catch (TimeoutException e) {
-      System.err.println("NegamaxAB depth " + (currDepth - 1) + ", Score " + pvMove.score);
+      //System.err.println("NegamaxAB depth " + (currDepth - 1) + ", Score " + pvMove.score);
       //We didn't get to finish the iteration, so pvMove is still set to the best move
       //from the previous deepening.
     }
-    System.err.println("Done - evaluated " + getNodesEvaluated() + " nodes.");
+    //System.err.println("Done - evaluated " + getNodesEvaluated() + " nodes.");
     return pvMove;
   }
 

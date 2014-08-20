@@ -7,7 +7,7 @@ import java.util.List;
  */
 public interface Evaluator {
 
-  int evaluate(GameState state);
+  int evaluate(GameState state, Move lastMove);
 
   List<Move> orderMoves(List<Move> moves, GameState s);
 }
