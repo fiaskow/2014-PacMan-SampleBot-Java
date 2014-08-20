@@ -73,7 +73,7 @@ public class Main {
       player = previousState.playerObject;
     } else {
       currentState = GameState.initGameState(maze);             //This is a new game
-      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce2(new ArrayList<Move>()),30),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
+      player = (PLAYER_SYMBOL == 'A') ? new Player(new NegamaxAB(new Quiesce3(),30),true) : new Player(new Negamax(new Quiesce(new ArrayList<Move>())));
       //player = new Player(new NegamaxAB(new Quiesce(new ArrayList<Move>()),30),true);
       //System.err.println("========= Starting new game. ========== " + (new Date(System.currentTimeMillis()).toString() ));
     }
@@ -104,7 +104,7 @@ public class Main {
   }
 
 
-  private static void printMaze(GameState state, List<Move> principalVariation, PrintStream stream) {
+  public static void printMaze(GameState state, List<Move> principalVariation, PrintStream stream) {
     StringBuilder s = new StringBuilder();
     for (int x = 0; x < HEIGHT; x++) {
       for (int y = 0; y < WIDTH; y++) {
