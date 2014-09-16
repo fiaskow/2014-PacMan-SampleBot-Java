@@ -27,7 +27,7 @@ public class Quiesce3 implements Evaluator, Serializable {
 
     //basic score we want to optimize
     score += state.player[GameState.SCORE] - state.opponent[GameState.SCORE];
-    score = score << 3;
+    score = score << 4;
 
     //this is a win for us!
     if (state.player[GameState.SCORE] >= 110) {
